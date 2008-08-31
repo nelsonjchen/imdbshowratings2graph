@@ -42,21 +42,34 @@ class Show
   private
   def process
     
-    season_number = doc.search("//tr/td[@bgcolor=#eeeeee]").last.inner_text.to_i
-    
-    doc.search("//tr/td[@bgcolor=#eeeeee]").each do |e|
-      e = e.parent
-      puts e
+    show_seasons = @doc.search("//tr/td[@bgcolor=#eeeeee]").last.inner_text.to_i
+    for i in (1..show_seasons)
+      @seasons[i] = Season.new(i)
     end
+   
+    @doc.search("//tr/td[@bgcolor=#eeeeee]").each do |e|
+      episode = Episode.new
+      episode.pc = e.inner_text
+      e = e.parent
+      episode.epnumber = episode.pc.split(/\./)[1].to_i
+      episode.season = episode.pc.split(/\./)[0].to_i
+      episode.name = e.children[3].inner_text
+      episode.rating = e.children[5].inner_text.to_f
+      @seasons[episode.season].shows << episode
+    end
+    
+    
   end
 end
   
 class Season
+  attr_accessor :number
   attr_accessor :length
   attr_accessor :shows
   
-  def initialize
+  def initialize(i)
     @shows = []
+    @number = i
   end
   
   def avg_rating
@@ -76,3 +89,5 @@ class Episode
   attr_accessor :rating
 end
 url = "http://www.imdb.com/title/tt0804503/eprate"
+
+Show.new(url)
